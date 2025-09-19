@@ -32,9 +32,9 @@ class alu_txn extends uvm_sequence_item;
     (opcode[7:4] inside {
         `ADD, `SUB, `MULT,
         `AND, `OR, `XOR, `NOT,
-        `EQUAL, `NOT_EQUAL,
-        `LESS_THAN, `LESS_THAN_EQUAL,
-        `GREATER_THAN, `GREATER_THAN_EQUAL
+        `BEQ, `BNE,
+        `BLT, `BLE,
+        `BGT, `BGE
     });
   }
 endclass
@@ -170,12 +170,12 @@ class alu_scoreboard extends uvm_component;
       `XOR:  ref_out = tr.a ^ tr.b;
       `NOT:  ref_out = ~tr.a;
 
-      `EQUAL:              ref_cc[0] = ($signed(tr.a) == $signed(tr.b));
-      `NOT_EQUAL:          ref_cc[0] = ($signed(tr.a) != $signed(tr.b));
-      `LESS_THAN:          ref_cc[0] = ($signed(tr.a) <  $signed(tr.b));
-      `LESS_THAN_EQUAL:    ref_cc[0] = ($signed(tr.a) <= $signed(tr.b));
-      `GREATER_THAN:       ref_cc[0] = ($signed(tr.a) >  $signed(tr.b));
-      `GREATER_THAN_EQUAL: ref_cc[0] = ($signed(tr.a) >= $signed(tr.b));
+      `BEQ: ref_cc[0] = ($signed(tr.a) == $signed(tr.b));
+      `BNE: ref_cc[0] = ($signed(tr.a) != $signed(tr.b));
+      `BLT: ref_cc[0] = ($signed(tr.a) <  $signed(tr.b));
+      `BLE: ref_cc[0] = ($signed(tr.a) <= $signed(tr.b));
+      `BGT: ref_cc[0] = ($signed(tr.a) >  $signed(tr.b));
+      `BGE: ref_cc[0] = ($signed(tr.a) >= $signed(tr.b));
     endcase
 
     if (ref_out !== tr.exp_out || ref_cc !== tr.exp_cc) begin
