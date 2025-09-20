@@ -44,45 +44,50 @@ module REGISTER_R_CE(q, d, rst, ce, clk);
 endmodule // REGISTER_R_CE
 
 /*
-  Asynchronous 4 reads ports
-  Synchronous  2 write ports
+  Asynchronous 2 reads ports
+  Synchronous  1 write port
 */
-module regfile #( parameter DEPTH = 32 ) (
+module regfile #( parameter DEPTH = 32, parameter WIDTH = 32 ) (
   input clk,
   input rst, 
-  input we0, we1,
-  // Read ports Way 0
-  input [$clog2(DEPTH)-1:0] raddr1_0, raddr2_0,
-  output [`CPU_DATA_BITS-1:0] rs1_0, rs2_0,
-  // Read ports Way 1
-  input [$clog2(DEPTH)-1:0] raddr1_1, raddr2_1,
-  output [`CPU_DATA_BITS-1:0] rs1_1, rs2_1,
-  // Write ports
-  input [$clog2(DEPTH)-1:0] waddr0, waddr1,
-  input [`CPU_DATA_BITS-1:0] rd0, rd1
+  input we,
+  // Read port 1
+  input [$clog2(DEPTH)-1:0] raddr1,
+  output [WIDTH-1:0] rs1,
+  // Read port 2
+  input [$clog2(DEPTH)-1:0] raddr2,
+  output [WIDTH-1:0] rs2,
+  // Write port 1
+  input [$clog2(DEPTH)-1:0] waddr,
+  input [WIDTH-1:0] rd
 );
 
   genvar i;
-  reg [`CPU_DATA_BITS-1:0] reg_d [DEPTH-1:0]; // din
-  reg [`CPU_DATA_BITS-1:0] reg_q [DEPTH-1:0]; // dout
+  reg [WIDTH-1:0] reg_d [DEPTH-1:0]; // din
+  reg [WIDTH-1:0] reg_q [DEPTH-1:0]; // dout
 
   // Register file
   generate
     for (i = 0; i < DEPTH; i++) begin
-      REGISTER_R_CE #(.N(`CPU_DATA_BITS)) reg_x (
-        .d((we1)? rd1 : rd0),     .q(reg_q[i]),
-        .clk(clk),  .rst(rst), 
-        .ce(
-          (we0 && (i == waddr0) && (waddr0 != 0)) ||
-          (we1 && (i == waddr1) && (waddr1 != 0)) ));
+      REGISTER #(.N(WIDTH)) reg_x (.clk(clk), .d(reg_d[i]), .q(reg_q[i]));
+
+      // Write
+      always @(*) begin 
+        if (rst == 1'b1) begin
+          reg_d[i] = {WIDTH{1'b0}};
+        end else begin
+          if ((we == 1'b1) && (i == waddr) && (waddr != 0)) begin
+            reg_d[waddr] = rd;
+          end else begin
+            reg_d[i] = reg_q[i];
+          end
+        end
+      end
     end
   endgenerate
 
   // Read
-  assign rs1_0 = reg_q[raddr1_0];
-  assign rs2_0 = reg_q[raddr2_0];
-
-  assign rs1_1 = reg_q[raddr1_1];
-  assign rs2_1 = reg_q[raddr2_1];
+  assign rs1 = reg_q[raddr1];
+  assign rs2 = reg_q[raddr2];
 
 endmodule

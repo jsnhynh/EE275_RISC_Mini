@@ -1,7 +1,4 @@
 module control (
-  input clk,
-  input rst,
-
   input [31:0] inst,
   input [3:0] ccr,
 
