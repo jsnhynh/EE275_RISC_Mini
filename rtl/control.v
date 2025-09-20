@@ -3,7 +3,6 @@ module control (
   input [3:0] ccr,
 
   output pc_sel,
-  output a_sel,
   output b_sel,
   output dmem_we,
   output wb_sel,
@@ -13,7 +12,6 @@ module control (
   always @* begin
     // Defaults
     pc_sel  = 'd0; // PC+4/ALU
-    a_sel   = 'd0; // RS1/PC
     b_sel   = 'd0; // RS2/IMM[15:0]
     dmem_we = 'd0;
     wb_sel  = 'd0; // ALU/DMEM
@@ -29,12 +27,13 @@ module control (
         reg_we = 'd1;
       end
 
+      `B_TYPE: begin
+        pc_sel = ccr[0];
+      end
+
       `J_TYPE: begin
         case (inst[7:4])
           `JUMP:    pc_sel = 'd1;
-          `BRANCH:  pc_sel = ccr[0];
-          `CALL:;
-          `RET:;
         endcase
       end
 
@@ -56,7 +55,6 @@ module control (
         // Defaults
         pc_sel  = 'd0;
         b_sel   = 'd0;
-        alu_op  = `ADD;
         dmem_we = 'd0;
         wb_sel  = 'd0;
         reg_we  = 'd0;

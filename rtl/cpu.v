@@ -7,6 +7,8 @@ module cpu #(
 );
   wire [WIDTH-1:0] rs1, rs2, alu_out, dmem_out;
   wire pc_sel, b_sel, dmem_we, wb_sel, reg_we;
+  wire [15:0] sp, sp_next;
+  wire [3:0] ccr, alu_cc;
 
   // PC, Stack Pointer, CCR Registers
   REGISTER_R #(.N(WIDTH)) pc_reg (
@@ -46,7 +48,7 @@ module cpu #(
     .a(rs1), 
     .b((bsel)? inst[31:20] : rs2), 
     .alu_out(alu_out),
-    .alu_op(inst[7:4]),  
+    .alu_op(inst[7:0]),  
     .alu_cc(alu_cc));
 
   // DMEM
@@ -62,7 +64,6 @@ module cpu #(
     .inst(inst), 
     .ccr(alu_cc),
     .pc_sel(pc_sel),
-    .a_sel(a_sel),
     .b_sel(b_sel),
     .dmem_we(dmem_we),
     .wb_sel(wb_sel),
