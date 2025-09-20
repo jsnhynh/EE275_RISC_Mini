@@ -22,11 +22,10 @@ module alu (
     alu_cc  = 4'b0000;
 
     case (alu_op)
-      // ---------------- Arithmetic ----------------
+      // Arithmetic
       `ADD: begin
         alu_out    = add_res;
-        // Overflow for addition (signed): (~a[31] & ~b[31] &  add_res[31]) |
-        //                                ( a[31] &  b[31] & ~add_res[31])
+        // Overflow for addition (signed):
         alu_cc[1]  = ( a[31] &  b[31] & ~add_res[31]) |
                       (~a[31] & ~b[31] &  add_res[31]);
       end
@@ -46,12 +45,12 @@ module alu (
       `NOT:   alu_out = ~a;
 
       // Comparisons (signed)
-      `EQUAL:               alu_cc[0] =  sub_zero;
-      `NOT_EQUAL:           alu_cc[0] = ~sub_zero;
-      `LESS_THAN:           alu_cc[0] =  (sub_negative ^ sub_overflow);               // N ^ V
-      `LESS_THAN_EQUAL:     alu_cc[0] =  (sub_negative ^ sub_overflow) | sub_zero;    // (N^V) | Z
-      `GREATER_THAN:        alu_cc[0] = ~( (sub_negative ^ sub_overflow) | sub_zero );// ~(LT | Z)
-      `GREATER_THAN_EQUAL:  alu_cc[0] = ~(sub_negative ^ sub_overflow);               // ~LT
+      `BEQ:   alu_cc[0] =  sub_zero;
+      `BNE:   alu_cc[0] = ~sub_zero;
+      `BLT:   alu_cc[0] =  (sub_negative ^ sub_overflow);               // N ^ V
+      `BLE:   alu_cc[0] =  (sub_negative ^ sub_overflow) | sub_zero;    // (N^V) | Z
+      `BGT:   alu_cc[0] = ~( (sub_negative ^ sub_overflow) | sub_zero );// ~(LT | Z)
+      `BGE:   alu_cc[0] = ~(sub_negative ^ sub_overflow);               // ~LT
 
       default: begin
         alu_out = 32'd0;
