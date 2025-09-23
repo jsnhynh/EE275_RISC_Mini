@@ -17,6 +17,7 @@
 `define B_TYPE 4'd2
 `define J_TYPE 4'd3
 `define M_TYPE 4'd4
+`define S_TYPE 4'd5
 
 // Opcode Operation
 
@@ -44,5 +45,9 @@
 // M-TYPE
 `define LOAD 4'd0
 `define STORE 4'd1
+
+// S-TYPE
+`define CALL 4'd0
+`define RET 4'd1
 
 `endif //OPCODE
