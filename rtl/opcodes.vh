@@ -1,9 +1,9 @@
 /**
     * List of opcodes.
     * The design is aimed at simplicity, hence the removal of funct3/7 normally found in RISC-V
-    * Opcode is 8 bits split into 2 sections
-    * Bits [3:0] Function Type (R/I/B/J/M)
-    * Bits [7:4] Operation
+    * Opcode is 7 bits split into 2 sections
+    * Bits [2:0] Function Type (R/I/B/J/M)
+    * Bits [6:3] Operation
  */
 
 `ifndef OPCODE
@@ -12,12 +12,12 @@
 // ***** Opcodes *****
 
 // Opcode Types
-`define R_TYPE 4'd0
-`define I_TYPE 4'd1
-`define B_TYPE 4'd2
-`define J_TYPE 4'd3
-`define M_TYPE 4'd4
-`define S_TYPE 4'd5
+`define R_TYPE 3'd0
+`define I_TYPE 3'd1
+`define B_TYPE 3'd2
+`define J_TYPE 3'd3
+`define M_TYPE 3'd4
+`define S_TYPE 3'd5
 
 // Opcode Operation
 

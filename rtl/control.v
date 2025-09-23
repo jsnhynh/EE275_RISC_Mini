@@ -6,7 +6,11 @@ module control (
   output b_sel,
   output dmem_we,
   output wb_sel,
-  output reg_we
+  output reg_we,
+
+  input [7:0] sc,
+  input [1:0] state_mode,
+  output [1:0] state_mode_next
 );
 
   always @* begin
@@ -16,8 +20,9 @@ module control (
     dmem_we = 'd0;
     wb_sel  = 'd0; // ALU/DMEM
     reg_we  = 'd0;
+    state_mode_next = (sc == 16)? 'd0 : state_mode; // IMEM, CALL, RET, Reserve
 
-    case (inst[3:0]) 
+    case (inst[2:0]) 
       `J_TYPE: begin
         reg_we = 'd1;
       end
@@ -32,13 +37,13 @@ module control (
       end
 
       `J_TYPE: begin
-        case (inst[7:4])
+        case (inst[6:3])
           `JUMP:    pc_sel = 'd1;
         endcase
       end
 
       `M_TYPE: begin
-        case (inst[7:4])
+        case (inst[6:3])
           `LOAD: begin
             b_sel   = 'd1;
             wb_sel  = 'd1;
@@ -51,6 +56,17 @@ module control (
         endcase
       end
 
+      `S_TYPE: begin
+        case (inst[6:3])
+          `CALL: begin
+            state_mode_next = 'd1;
+          end
+          `RET: begin
+            state_mode_next = 'd2;
+          end
+        endcase
+      end
+
       default: begin
         // Defaults
         pc_sel  = 'd0;
@@ -58,6 +74,8 @@ module control (
         dmem_we = 'd0;
         wb_sel  = 'd0;
         reg_we  = 'd0;
+        call_active = 'd0;
+        ret_active  = 'd0;
       end
     endcase
 

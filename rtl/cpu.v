@@ -7,20 +7,26 @@ module cpu #(
 );
   wire [WIDTH-1:0] rs1, rs2, alu_out, dmem_out;
   wire pc_sel, b_sel, dmem_we, wb_sel, reg_we;
-  wire [15:0] pc, sp_count, sp_next;
+  wire [15:0] pc;
+  wire [7:0] sc;
   wire [3:0] ccr, alu_cc;
 
   // PC, Stack Pointer, CCR Registers
   REGISTER_R #(.N(16)) pc_reg (
     .q(pc), 
-    .d((pc_sel)? pc+(inst[31:20]<<2) : pc+4), 
+    .d((pc_sel)? pc+(inst[31:22]<<2) : pc+4), 
     .rst(rst), 
     .clk(clk));
-  REGISTER_R #(.N(16)) sp_count_reg (
-    .q(sp_count), 
-    .d(sp_next), 
+  REGISTER_R_CE #(.N(8)) sc_reg (
+    .q(sc), 
+    .d((sc == 16)? 'd0 : sc+4), 
     .rst(rst), 
-    .ce(ce), 
+    .ce(state_mode != 'd0), 
+    .clk(clk));
+  REGISTER_R #(.N(2)) state_mode_reg(
+    .q(state_mode),
+    .d(state_mode_next),
+    .rst(rst),
     .clk(clk));
   REGISTER_R #(.N(4)) ccr_reg (
     .q(ccr), 
@@ -32,10 +38,10 @@ module cpu #(
   imem im (.addr(pc), .inst(inst));
 
   // REGFILE
-  regfile #(.DEPTH(16)) rf (
-    .waddr(inst[11:8]), 
-    .raddr1(inst[15:12]), 
-    .raddr2(inst[19:16]),
+  regfile #(.DEPTH(32)) rf (
+    .waddr(inst[11:7]), 
+    .raddr1(inst[16:12]), 
+    .raddr2(inst[21:17]),
     .rd((wb_sel)? dmem_out : alu_out),
     .rs1(rs1),
     .rs2(rs2),
@@ -46,9 +52,9 @@ module cpu #(
   // ALU
   alu alu_inst (
     .a(rs1), 
-    .b((bsel)? inst[31:20] : rs2), 
+    .b((bsel)? {{22{inst[31]}}, inst[31:22]} : rs2), 
     .alu_out(alu_out),
-    .alu_op(inst[7:0]),  
+    .alu_op(inst[6:0]),
     .alu_cc(alu_cc));
 
   // DMEM
@@ -61,7 +67,7 @@ module cpu #(
 
   // Control Logic
   control ctrl (
-    .inst(inst), 
+    .inst(inst),
     .ccr(alu_cc),
     .pc_sel(pc_sel),
     .b_sel(b_sel),

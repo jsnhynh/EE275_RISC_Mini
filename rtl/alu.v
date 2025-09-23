@@ -1,6 +1,6 @@
 module alu (
   input  [31:0] a, b,
-  input  [7:0]  opcode,
+  input  [6:0]  opcode,
   output reg [31:0] alu_out,
   output reg [3:0]  alu_cc // [Reserve, Underflow, Overflow, Branch True]
 );
@@ -18,8 +18,8 @@ module alu (
   wire sub_overflow = (a[31] ^ b[31]) & (a[31] ^ sub_res[31]);  // V
 
   always @* begin
-    if ((opcode[3:0] == `R_TYPE) or opcode[3:0] == `I_TYPE) begin
-      case (opcode[7:4])
+    if ((opcode[2:0] == `R_TYPE) or opcode[2:0] == `I_TYPE) begin
+      case (opcode[6:3])
         // Arithmetic
         `ADD: begin
           alu_out    = add_res;
