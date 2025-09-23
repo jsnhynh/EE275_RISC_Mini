@@ -1,21 +1,25 @@
-// RISC CODE GOES HERE
+`include "opcodes.vh"
 
 module cpu #(
-    parameter WIDTH = 32,
+    parameter WIDTH = 32
 )(
-  input clk, rst,
+  input clk, rst
 );
-  wire [WIDTH-1:0] rs1, rs2, alu_out, dmem_out;
+  wire [WIDTH-1:0] rs1, rs2, alu_out, imem_out, dmem_out, call_out, ret_out;
+  reg [WIDTH-1:0] inst;
   wire pc_sel, b_sel, dmem_we, wb_sel, reg_we;
   wire [15:0] pc;
-  wire [7:0] sc;
   wire [3:0] ccr, alu_cc;
 
+  wire [7:0] sc;
+  wire [1:0] state_mode, state_mode_next;
+
   // PC, Stack Pointer, CCR Registers
-  REGISTER_R #(.N(16)) pc_reg (
+  REGISTER_R_CE #(.N(16)) pc_reg (
     .q(pc), 
     .d((pc_sel)? pc+(inst[31:22]<<2) : pc+4), 
-    .rst(rst), 
+    .rst(rst),
+    .ce(state_mode == 'd0), 
     .clk(clk));
   REGISTER_R_CE #(.N(8)) sc_reg (
     .q(sc), 
@@ -35,7 +39,17 @@ module cpu #(
     .clk(clk));
 
   // IMEM
-  imem im (.addr(pc), .inst(inst));
+  imem im (.addr(pc), .inst(imem_out));
+  imem #(.INIT_FILE("CALL.hex")) im_call (.addr(sc), .inst(call_out));
+  imem #(.INIT_FILE("RET.hex")) im_ret (.addr(sc), .inst(ret_out));
+
+  always @* begin
+    case(state_mode)
+      'd0: inst = imem_out;
+      'd1: inst = call_out;
+      'd2: inst = ret_out;
+    endcase
+  end
 
   // REGFILE
   regfile #(.DEPTH(32)) rf (
@@ -73,6 +87,9 @@ module cpu #(
     .b_sel(b_sel),
     .dmem_we(dmem_we),
     .wb_sel(wb_sel),
-    .reg_we(reg_we));
+    .reg_we(reg_we),
+    .sc(sc),
+    .state_mode(state_mode),
+    .state_mode_next(state_mode_next));
 
 endmodule

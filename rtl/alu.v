@@ -1,3 +1,5 @@
+`include "opcodes.vh"
+
 module alu (
   input  [31:0] a, b,
   input  [6:0]  opcode,
@@ -18,7 +20,7 @@ module alu (
   wire sub_overflow = (a[31] ^ b[31]) & (a[31] ^ sub_res[31]);  // V
 
   always @* begin
-    if ((opcode[2:0] == `R_TYPE) or opcode[2:0] == `I_TYPE) begin
+    if ((opcode[2:0] == `R_TYPE) | (opcode[2:0] == `I_TYPE)) begin
       case (opcode[6:3])
         // Arithmetic
         `ADD: begin
