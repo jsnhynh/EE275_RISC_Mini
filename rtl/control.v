@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "opcodes.vh"
 
 module control (

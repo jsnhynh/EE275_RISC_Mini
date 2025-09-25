@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "opcodes.vh"
 
 module cpu #(
@@ -17,13 +18,13 @@ module cpu #(
   // PC, Stack Pointer, CCR Registers
   REGISTER_R_CE #(.N(16)) pc_reg (
     .q(pc), 
-    .d((pc_sel)? pc+(inst[31:22]<<2) : pc+4), 
+    .d((pc_sel)? pc+{2'b00, inst[31:22], 2'b00} : pc+16'd4), 
     .rst(rst),
     .ce(state_mode == 'd0), 
     .clk(clk));
   REGISTER_R_CE #(.N(8)) sc_reg (
     .q(sc), 
-    .d((sc == 16)? 'd0 : sc+4), 
+    .d((sc == 16)? 8'd0 : sc+8'd4), 
     .rst(rst), 
     .ce(state_mode != 'd0), 
     .clk(clk));
@@ -40,8 +41,8 @@ module cpu #(
 
   // IMEM
   imem im (.addr(pc), .inst(imem_out));
-  imem #(.INIT_FILE("CALL.hex")) im_call (.addr(sc), .inst(call_out));
-  imem #(.INIT_FILE("RET.hex")) im_ret (.addr(sc), .inst(ret_out));
+  imem #(.ADDR_WIDTH(8), .INIT_FILE("CALL.hex")) im_call (.addr(sc), .inst(call_out));
+  imem #(.ADDR_WIDTH(8), .INIT_FILE("RET.hex")) im_ret (.addr(sc), .inst(ret_out));
 
   always @* begin
     case(state_mode)
@@ -66,16 +67,16 @@ module cpu #(
   // ALU
   alu alu_inst (
     .a(rs1), 
-    .b((bsel)? {{22{inst[31]}}, inst[31:22]} : rs2), 
+    .b((b_sel)? {{22{inst[31]}}, inst[31:22]} : rs2), 
     .alu_out(alu_out),
-    .alu_op(inst[6:0]),
+    .opcode(inst[6:0]),
     .alu_cc(alu_cc));
 
   // DMEM
   dmem dm (
     .clk(clk), 
     .we(dmem_we), 
-    .addr(alu_out), 
+    .addr(alu_out[15:0]), 
     .wdata(rs2), 
     .rdata(dmem_out));
 

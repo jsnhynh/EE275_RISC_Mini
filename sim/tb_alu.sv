@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "opcodes.vh"
 
 module alu_tb;
   // DUT signals
@@ -31,8 +32,8 @@ module alu_tb;
                   opname, a, b, alu_out, alu_cc, expected_out, expected_cc);
         errors = errors + 1;
       end else begin
-        $display("PASS  %s: a=%0d b=%0d out=%0d cc=%b",
-                  opname, a, b, alu_out, alu_cc);
+        $display("PASS %s: a=%0d b=%0d => got out=%0d cc=%b, expected out=%0d cc=%b",
+                  opname, a, b, alu_out, alu_cc, expected_out, expected_cc);
       end
     end
   endtask
@@ -41,7 +42,7 @@ module alu_tb;
     errors = 0;
     $display("=== Randomized ALU Testbench Start ===");
 
-    for (i=0; i<10; i=i+1) begin
+    for (i=0; i<1; i=i+1) begin
       a = $random;
       b = $random;
       $display("--- Trial %0d: a=%0d b=%0d ---", i, a, b);

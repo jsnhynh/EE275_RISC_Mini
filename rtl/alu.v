@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "opcodes.vh"
 
 module alu (
@@ -20,7 +21,10 @@ module alu (
   wire sub_overflow = (a[31] ^ b[31]) & (a[31] ^ sub_res[31]);  // V
 
   always @* begin
-    if ((opcode[2:0] == `R_TYPE) | (opcode[2:0] == `I_TYPE)) begin
+    if ((opcode[2:0] == `R_TYPE) | (opcode[2:0] == `I_TYPE) | (opcode[2:0] == `B_TYPE)) begin
+      alu_out = 'd0;
+      alu_cc  = 4'b0000;
+      
       case (opcode[6:3])
         // Arithmetic
         `ADD: begin

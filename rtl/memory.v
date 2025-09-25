@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // Instruction Memory (async read)
 module imem #(
     parameter ADDR_WIDTH = 16,

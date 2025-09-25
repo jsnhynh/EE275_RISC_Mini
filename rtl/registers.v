@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 // Register of D-Type Flip-flops
 module REGISTER(q, d, clk);
   parameter N = 1;
@@ -64,11 +66,11 @@ module regfile #( parameter DEPTH = 32, parameter WIDTH = 32 ) (
 
   genvar i;
   reg [WIDTH-1:0] reg_d [DEPTH-1:0]; // din
-  reg [WIDTH-1:0] reg_q [DEPTH-1:0]; // dout
+  wire [WIDTH-1:0] reg_q [DEPTH-1:0]; // dout
 
   // Register file
   generate
-    for (i = 0; i < DEPTH; i++) begin
+    for (i = 0; i < DEPTH; i = i + 1) begin
       REGISTER #(.N(WIDTH)) reg_x (.clk(clk), .d(reg_d[i]), .q(reg_q[i]));
 
       // Write

@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module cla4 (
   input  [3:0] a, b,
   input        cin,
