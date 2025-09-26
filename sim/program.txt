@@ -20,13 +20,13 @@
 // and x10 x1 x1    x = 1
 
 // or x10 x0 x1     x = 1
-// or x10 x1 x2     x = 3?
+// or x10 x1 x2     x = 3
 
 // xor x10 x1 x1    x = 0
 // xor x10 x0 x1    x = 1
 
-// not x10 x1       x = 0
-// not x10 x0       x = 1
+// not x10 x1       
+// not x10 x0       
 
 // ------ I-Types ------
 
@@ -48,8 +48,8 @@
 // xori x10 x1 1    x = 0
 // xori x10 x0 1    x = 1
 
-// noti x10 1       x = 0
-// noti x10 0       x = 1
+// noti x10 1       
+// noti x10 0       
 
 // ------ B-Types ------    x0 should be skipped
 

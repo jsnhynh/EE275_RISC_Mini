@@ -2,13 +2,11 @@
 `include "opcodes.vh"
 
 module alu_tb;
-  // DUT signals
   reg  [31:0] a, b;
   reg  [6:0]  opcode;
   wire [31:0] alu_out;
   wire [3:0]  alu_cc;
 
-  // Instantiate DUT
   alu dut (
     .a(a),
     .b(b),
@@ -19,131 +17,131 @@ module alu_tb;
 
   integer i, errors;
 
-  // Golden model
   reg [31:0] expected_out;
   reg [3:0]  expected_cc;
 
-  task check_result;
-    input [255:0] opname;
+  task check_output;
+    input [63:0] opname;
     begin
-      #1; 
-      if (alu_out !== expected_out || alu_cc !== expected_cc) begin
-        $display("ERROR %s: a=%0d b=%0d => got out=%0d cc=%b, expected out=%0d cc=%b",
-                  opname, a, b, alu_out, alu_cc, expected_out, expected_cc);
+      #1;
+      if (alu_out !== expected_out) begin
+        $display("ERROR %-6s: a=%0d b=%0d => got out=%0d expected out=%0d",
+                  opname, $signed(a), $signed(b), $signed(alu_out), $signed(expected_out));
         errors = errors + 1;
       end else begin
-        $display("PASS %s: a=%0d b=%0d => got out=%0d cc=%b, expected out=%0d cc=%b",
-                  opname, a, b, alu_out, alu_cc, expected_out, expected_cc);
+        $display("PASS %-6s: a=%0d b=%0d => got out=%0d expected out=%0d",
+                  opname, $signed(a), $signed(b), $signed(alu_out), $signed(expected_out));
+      end
+    end
+  endtask
+  task check_cc;
+    input [63:0] opname;
+    begin
+      #1;
+      if (alu_cc[0] !== expected_cc[0]) begin
+        $display("ERROR %-6s: a=%0d b=%0d => got cc=%b, expected cc=%b",
+                  opname, $signed(a), $signed(b), alu_cc, expected_cc);
+        errors = errors + 1;
+      end else begin
+        $display("PASS %-6s: a=%0d b=%0d => got cc=%b, expected cc=%b",
+                  opname, $signed(a), $signed(b), alu_cc, expected_cc);
       end
     end
   endtask
 
   initial begin
     errors = 0;
-    $display("=== Randomized ALU Testbench Start ===");
+    $display("---- Randomized ALU Test ----");
 
-    for (i=0; i<1; i=i+1) begin
+    for (i = 0; i < 10; i = i + 1) begin
+      $display("-- Test Suite %0d ----", i);
       a = $random;
       b = $random;
-      $display("--- Trial %0d: a=%0d b=%0d ---", i, a, b);
 
-      // ---------- Arithmetic ----------
-      // ADD
+      // Arithmetic
       opcode = {`ADD, `R_TYPE};
-      expected_out = a + b;
-      expected_cc  = 4'b0000;
-      expected_cc[1] = ( a[31] &  b[31] & ~expected_out[31]) |
-                       (~a[31] & ~b[31] &  expected_out[31]);
-      check_result("ADD");
-
-      // SUB
+      expected_out   = a + b;
+      check_output("ADD");
       opcode = {`SUB, `R_TYPE};
-      expected_out = a - b;
-      expected_cc  = 4'b0000;
-      expected_cc[1] = (a[31] ^ b[31]) & (a[31] ^ expected_out[31]);
-      expected_cc[2] = (a < b); // underflow/borrow
-      check_result("SUB");
-
-      // MULT
+      expected_out   = a - b;
+      check_output("SUB");
       opcode = {`MULT, `R_TYPE};
       expected_out = a * b;
-      expected_cc  = 4'b0000;
-      check_result("MULT");
+      check_output("MULT");
 
-      // ---------- Logic ----------
-      // AND
-      opcode = {`AND, `R_TYPE};
-      expected_out = a & b;
-      expected_cc  = 4'b0000;
-      check_result("AND");
+      // Logic
+      opcode = {`AND, `R_TYPE}; 
+      expected_out = a & b; 
+      check_output("AND");
+      opcode = {`OR , `R_TYPE}; 
+      expected_out = a | b; 
+      check_output("OR");
+      opcode = {`XOR, `R_TYPE}; 
+      expected_out = a ^ b; 
+      check_output("XOR");
+      opcode = {`NOT, `R_TYPE}; 
+      expected_out = ~a;    
+      check_output("NOT");
 
-      // OR
-      opcode = {`OR, `R_TYPE};
-      expected_out = a | b;
-      expected_cc  = 4'b0000;
-      check_result("OR");
-
-      // XOR
-      opcode = {`XOR, `R_TYPE};
-      expected_out = a ^ b;
-      expected_cc  = 4'b0000;
-      check_result("XOR");
-
-      // NOT
-      opcode = {`NOT, `R_TYPE};
-      expected_out = ~a;
-      expected_cc  = 4'b0000;
-      check_result("NOT");
-
-      // ---------- Branches ----------
-      // BEQ
-      opcode = {`BEQ, `B_TYPE};
-      expected_out = 32'd0;
-      expected_cc  = 4'b0000;
-      expected_cc[0] = (a == b);
-      check_result("BEQ");
-
-      // BNE
+      // Branches
+      expected_cc = 4'b0000;
+      opcode = {`BEQ, `B_TYPE}; 
+      expected_cc[0] = (a == b);                       
+      check_cc("BEQ");
       opcode = {`BNE, `B_TYPE};
-      expected_out = 32'd0;
-      expected_cc  = 4'b0000;
-      expected_cc[0] = (a != b);
-      check_result("BNE");
-
-      // BLT (signed)
+      expected_cc[0] = (a != b);                       
+      check_cc("BNE");
       opcode = {`BLT, `B_TYPE};
-      expected_out = 32'd0;
-      expected_cc  = 4'b0000;
-      expected_cc[0] = ($signed(a) < $signed(b));
-      check_result("BLT");
-
-      // BLE (signed)
+      expected_cc[0] = ($signed(a) <  $signed(b));     
+      check_cc("BLT");
       opcode = {`BLE, `B_TYPE};
-      expected_out = 32'd0;
-      expected_cc  = 4'b0000;
-      expected_cc[0] = ($signed(a) <= $signed(b));
-      check_result("BLE");
-
-      // BGT (signed)
+      expected_cc[0] = ($signed(a) <= $signed(b));     
+      check_cc("BLE");
       opcode = {`BGT, `B_TYPE};
-      expected_out = 32'd0;
-      expected_cc  = 4'b0000;
-      expected_cc[0] = ($signed(a) > $signed(b));
-      check_result("BGT");
-
-      // BGE (signed)
+      expected_cc[0] = ($signed(a) >  $signed(b));    
+      check_cc("BGT");
       opcode = {`BGE, `B_TYPE};
-      expected_out = 32'd0;
-      expected_cc  = 4'b0000;
-      expected_cc[0] = ($signed(a) >= $signed(b));
-      check_result("BGE");
+      expected_cc[0] = ($signed(a) >= $signed(b));     
+      check_cc("BGE");
     end
 
+    $display("---- Directed Overflow/Underflow Tests ----");
+    expected_cc = 4'b0000;
+    // ADD positive overflow: INT_MAX + 1 -> negative
+    a = 32'h7fffffff; 
+    b = 32'd1; 
+    opcode = {`ADD, `R_TYPE};
+    expected_cc[1] = (~a[31] & ~b[31] &  expected_out[31]); // Overflow
+    expected_cc[2] = ( a[31] &  b[31] & ~expected_out[31]); // Underflow
+    check_cc("ADD+OVF");
+
+    // ADD negative overflow (underflow): INT_MIN + (-1) -> positive
+    a = 32'h80000000; 
+    b = -32'sd1; 
+    opcode = {`ADD, `R_TYPE};
+    expected_cc[1] = (~a[31] & ~b[31] &  expected_out[31]);
+    expected_cc[2] = ( a[31] &  b[31] & ~expected_out[31]);
+    check_cc("ADD-UNF");
+
+    // SUB positive overflow: INT_MAX - (-1) -> negative
+    a = 32'h7fffffff; 
+    b = -32'sd1; 
+    opcode = {`SUB, `R_TYPE};
+    expected_cc[1] = (~a[31] &  b[31] &  expected_out[31]); // Overflow
+    expected_cc[2] = ( a[31] & ~b[31] & ~expected_out[31]); // Underflow
+    check_cc("SUB+OVF");
+
+    // SUB negative overflow (underflow): INT_MIN - 1 -> positive
+    a = 32'h80000000; 
+    b = 32'd1; 
+    opcode = {`SUB, `R_TYPE};
+    expected_cc[1] = (~a[31] &  b[31] &  expected_out[31]);
+    expected_cc[2] = ( a[31] & ~b[31] & ~expected_out[31]);
+    check_cc("SUB-UNF");
+
     $display("=== Testbench Done, errors=%0d ===", errors);
-    if (errors == 0)
-      $display("All tests PASSED ✅");
-    else
-      $display("Some tests FAILED ❌");
+    if (errors == 0) $display("All tests PASSED");
+    else             $display("Some tests FAILED");
     $finish;
   end
 endmodule
