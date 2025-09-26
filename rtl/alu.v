@@ -64,6 +64,7 @@ module alu (
     end else begin
       alu_out = add_res;
       alu_cc  = 4'b0000;
+      alu_cc[0] = (opcode[2:0] == `J_TYPE);
       alu_cc[1]  = ( a[31] &  b[31] & ~add_res[31]) |
                         (~a[31] & ~b[31] &  add_res[31]);
     end

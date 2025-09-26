@@ -23,10 +23,10 @@ module control (
     dmem_we = 'd0;
     wb_sel  = 'd0; // ALU/DMEM
     reg_we  = 'd0;
-    state_mode_next = (sc == 16)? 'd0 : state_mode; // IMEM, CALL, RET, Reserve
+    state_mode_next = (sc >= 'd64)? 2'd0 : state_mode; // IMEM, CALL, RET, Reserve
 
-    case (inst[2:0]) 
-      `J_TYPE: begin
+    case (inst[2:0])
+      `R_TYPE: begin
         reg_we = 'd1;
       end
 
@@ -61,12 +61,8 @@ module control (
 
       `S_TYPE: begin
         case (inst[6:3])
-          `CALL: begin
-            state_mode_next = 'd1;
-          end
-          `RET: begin
-            state_mode_next = 'd2;
-          end
+          `CALL: state_mode_next = 'd1;
+          `RET: state_mode_next = 'd2;
         endcase
       end
 
@@ -77,10 +73,9 @@ module control (
         dmem_we = 'd0;
         wb_sel  = 'd0;
         reg_we  = 'd0;
-        state_mode_next = 'd0;
+        state_mode_next = (sc >= 'd16)? 2'd0 : state_mode;
       end
     endcase
-
   end
 
 endmodule

@@ -24,11 +24,11 @@ module cpu #(
     .clk(clk));
   REGISTER_R_CE #(.N(8)) sc_reg (
     .q(sc), 
-    .d((sc == 16)? 8'd0 : sc+8'd4), 
+    .d((sc >= 'd64)? 8'd0 : sc+8'd4), 
     .rst(rst), 
     .ce(state_mode != 'd0), 
     .clk(clk));
-  REGISTER_R #(.N(2)) state_mode_reg(
+  REGISTER_R #(.N(2)) state_mode_reg (
     .q(state_mode),
     .d(state_mode_next),
     .rst(rst),
@@ -40,11 +40,12 @@ module cpu #(
     .clk(clk));
 
   // IMEM
-  imem im (.addr(pc), .inst(imem_out));
+  imem #(.ADDR_WIDTH(16), .INIT_FILE("program.hex")) im (.addr(pc), .inst(imem_out));
   imem #(.ADDR_WIDTH(8), .INIT_FILE("CALL.hex")) im_call (.addr(sc), .inst(call_out));
   imem #(.ADDR_WIDTH(8), .INIT_FILE("RET.hex")) im_ret (.addr(sc), .inst(ret_out));
 
   always @* begin
+    inst = 'd0;
     case(state_mode)
       'd0: inst = imem_out;
       'd1: inst = call_out;
