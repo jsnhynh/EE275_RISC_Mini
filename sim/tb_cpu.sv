@@ -96,7 +96,7 @@ initial begin
             $signed(dut.rf.rd),
             dut.reg_we,
             dut.alu_cc,
-            dut.state_mode_next);
+            dut.state_mode);
 end
 
   // Run for some cycles
